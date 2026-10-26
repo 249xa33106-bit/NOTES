@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # 1. Frontend Web Service (Nginx Reverse Proxy & Static Asset Server)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lumixora-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - lumixora-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # 2. Backend API & Code Execution Sandbox Service
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: lumixora-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CORS_ORIGIN=*
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    restart: unless-stopped
+    networks:
+      - lumixora-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  lumixora-net:
+    driver: bridge

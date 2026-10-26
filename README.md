@@ -1,94 +1,171 @@
-# Lumixora Notes AI — Complete AI Notes Generation Platform
+# 🎓 Lumixora Notes AI — Enterprise Academic Intelligence Platform
 
-**Lumixora Notes AI** is a production-grade, AI-powered web platform architected to generate comprehensive, technically accurate, exam-ready study notes for any academic, engineering, or scientific syllabus.
+[![CI/CD Pipeline](https://github.com/249xa33106-bit/NOTES/actions/workflows/ci.yml/badge.svg)](https://github.com/249xa33106-bit/NOTES/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Node Version](https://img.shields.io/badge/Node.js-20%20LTS-brightgreen.svg)](https://nodejs.org/)
+[![React 19](https://img.shields.io/badge/React-19.3-61dafb.svg)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED.svg)](https://www.docker.com/)
 
----
-
-## 🌟 Key Features
-
-1. **Intelligent Curriculum & Syllabus Processing**:
-   - Parses university syllabus units, modules, and lecture notes directly from uploaded PDF, DOCX, and TXT files.
-   - Extracts subject hierarchy, learning outcomes, and module topics.
-
-2. **Pedagogical Notes Architecture**:
-   - Complete multi-section outlines: Title, Table of Contents, Definitions, Fundamentals to Advanced Concepts, Mathematical Derivations & Properties, Architectural Flowcharts & Models, Complete Code with verified outputs, Exam Short & Long Solutions, Interactive MCQs, Viva Voce questions, and Revision Cheatsheets.
-
-3. **Real Mermaid Visual Generation**:
-   - Generates and live-renders Mermaid diagrams to SVG (flowcharts, state diagrams, class diagrams, decision trees).
-   - In-app diagram controls: Zoom in/out, pan, reset zoom, fullscreen modal preview, copy rendered SVG, and live Mermaid source code editor with instant re-render.
-
-4. **Mathematical Rigor with KaTeX**:
-   - Renders inline equations (`$...$`) and display block equations (`$$...$$`).
-   - Step-by-step mathematical proofs and induction derivations.
-
-5. **Interactive Code & Execution Sandbox**:
-   - Syntax-highlighted code blocks with line numbers and one-click copy.
-   - Dual-tab output panel: **Expected Output (Model Verified)** vs **Live Sandbox Output (Real Execution)**.
-   - Real-time client & server execution for Python & JavaScript with stdout capture.
-
-6. **Structured Notes Reader & Editor**:
-   - Sticky Table of Contents sidebar with active section tracking.
-   - In-document keyword search with instant jumping.
-   - Read Mode vs Edit Mode toggles.
-   - Inline section title and content editing.
-   - Section re-generation with custom AI instructions.
-   - Document duplication, renaming, and local autosave.
-
-7. **Dual-Format Professional Export**:
-   - **Downloadable Microsoft Word (.docx)**: Generates true `.docx` files using native tables, callout blocks, styled code fonts, cover page, and headers.
-   - **Downloadable Print-Ready PDF**: Clean typography, cover page, headers/footers, and page breaks.
-   - **Markdown (.md)**: Clean GFM format with Mermaid and KaTeX blocks.
-
-8. **AI Provider Abstraction**:
-   - Google Gemini API (`gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`).
-   - OpenAI API (`gpt-4o`, `gpt-4o-mini`).
-   - Built-in **Lumixora High-Fidelity Academic Engine** (works 100% out of the box without requiring external API keys).
+**Lumixora Notes AI** is a production-ready, full-stack academic study platform engineered to generate syllabus-aligned, mathematically rigorous study notes, 100-mark university model question papers, and past-year exam recurrence analytics for any academic discipline.
 
 ---
 
-## 🌲 Pre-Seeded Academic Topic
+## 🏛️ System Architecture
 
-The application comes pre-seeded with a comprehensive B.Tech Computer Science reference:
-- **Subject**: Computer Science & Engineering
-- **Topic**: Data Structures — Trees
-- **Level**: B.Tech / Undergraduate
-- **Coverage**: Full terminology (Root, Height, Depth, Degree, Leaf, Internal), binary tree classifications (Full, Complete, Perfect, Balanced, Degenerate), mathematical induction proof ($n_0 = n_2 + 1$), Preorder/Inorder/Postorder/Level-order traversals, BST search/insert and 3-case deletion, AVL rotations (LL, RR, LR, RL), Heaps, B-Trees, Tries, complete operational complexity comparison table, complete Python and C implementations with outputs, 2-mark & 10-mark university exam questions, interactive MCQs, and formula cheat sheet.
+```mermaid
+graph TD
+    subgraph Client ["Client Layer (React 19 + TypeScript + Vite + Tailwind CSS)"]
+        UI["Modern Light-Mode Academic Interface"]
+        Renderer["Master Content Block Dispatcher"]
+        Mermaid["Mermaid SVG Visualizer (Zoom/Pan/Editor)"]
+        KaTeX["KaTeX LaTeX Math Engine (Inline & Block)"]
+        Tools["Interactive Study Studio (3D Flashcards, Mindmap, Audio TTS)"]
+        Predictor["AI Exam Question Predictor & Self-Test Rubric Grader"]
+    end
 
----
+    subgraph Service ["Engine & Abstraction Layer"]
+        LumixoraEngine["Lumixora High-Fidelity Domain Engine (Zero Setup)"]
+        AIProviders["Multi-Provider Layer (Gemini 1.5 & OpenAI GPT-4o)"]
+        DocParser["Document Parser (PDF & DOCX Syllabus Extractor)"]
+        Exporter["Export Service (Native DOCX & Print PDF)"]
+        OfflineStorage["Offline IndexedDB & LocalStorage Autosave"]
+    end
 
-## 🚀 Suggested Routes
+    subgraph Backend ["Backend Runtime (Express.js Container)"]
+        API["Hardened API Gateway (Rate Limiter & Security Headers)"]
+        Health["Observability & Health Probes (/health)"]
+        Sandbox["Sandboxed Code Execution Engine (Python & Node.js)"]
+    end
 
-- `/` — Overview & Interactive Feature Showcase
-- `/generate` — High-Capability Notes Generation Form & Syllabus Uploader
-- `/notes/:id` — Notes Reader, Interactive Editor, and Export Center
-- `/library` — Saved Notes Management, Search, Filters & Duplicate
-- `/settings` — AI Provider, Model Selection, Temperature & Cloud Sync
-
----
-
-## 🛠️ Installation & Development
-
-```bash
-# Install dependencies
-npm install
-
-# Start Vite Development Server
-npm run dev
-
-# Build for Production
-npm run build
-
-# Preview Production Build
-npm run preview
-
-# (Optional) Run Backend API Server
-npm run server
+    UI --> Renderer
+    Renderer --> Mermaid
+    Renderer --> KaTeX
+    UI --> Tools
+    UI --> Predictor
+    UI --> Service
+    Service --> LumixoraEngine
+    Service --> AIProviders
+    Service --> Exporter
+    Service --> OfflineStorage
+    Service --> DocParser
+    UI -.->|REST / JSON| API
+    API --> Health
+    API --> Sandbox
 ```
 
 ---
 
-## 🎨 Design Philosophy
+## 🚀 Key Industry Features
 
-- **Strict Light Mode Only** (No dark mode).
-- Neutral white and slate background (`#f8fafc` / `#ffffff`) with restrained blue (`#2563eb`) and violet (`#4f46e5`, `#7c3aed`) accents.
-- Accessible contrast, clear Inter typography, rounded cards, and subtle elevation shadows.
+| Feature | Description | Enterprise Standard |
+| :--- | :--- | :--- |
+| **Universal Multi-Discipline Generator** | Generates detailed notes for Computer Science, Mathematics, Electrical, Mechanical, Physics, Chemistry, Biology, Economics, and Law. | Automated domain detection; code suppression for purely theoretical topics. |
+| **100-Mark University Model Paper** | Synthesizes standard university examination papers (PART A: 10 $\times$ 2M = 20M, PART B: 5 $\times$ 16M = 80M with either/or choice). | Anna University, JNTU, VTU, KTU & NBA curriculum compliance. |
+| **AI Answer Rubric Evaluator** | Interactive practice scratchpad where students draft solutions and receive real-time objective scoring against examiner milestones. | Evaluates theorem statement, schematic, derivation, and boundary limits. |
+| **Mathematical Proofs & Derivations** | Native KaTeX rendering for integrals, matrices, limits, summations, and Laplace transforms. | Zero typographical artifacts; full KaTeX mathematical typesetting. |
+| **Interactive Mermaid Diagrams** | Architectural graphs, AVL rotation models, and state diagrams rendered as dynamic SVGs. | Zoom, pan, fullscreen preview, copy SVG, and live diagram editing. |
+| **Sandboxed Code Execution** | Real in-browser Python and JavaScript execution sandbox with resource guards. | 4.5s execution timeout, 512KB buffer cap, and hazardous call filter. |
+| **Native Word (.docx) & PDF Export** | One-click real `.docx` generator with cover pages, tables, callout boxes, and model answers. | Uses Microsoft Word OpenXML (`docx`) standard. |
+| **3D Flashcards & Mindmaps** | Flippable active recall cards with mastery tracker and interactive visual knowledge graph. | Anki `.tsv` export; direct section jumping. |
+| **SpeechSynthesis Audio Lecture** | In-browser text-to-speech lecture player with playback speed toggles (1x, 1.25x, 1.5x). | Zero external API cost; runs directly in browser. |
+
+---
+
+## 🐳 Quickstart with Docker Compose
+
+Run the entire production stack (Frontend Nginx + Backend API + Sandbox) with a single command:
+
+```bash
+# 1. Clone repository
+git clone https://github.com/249xa33106-bit/NOTES.git
+cd NOTES
+
+# 2. Launch production containers
+docker compose up -d --build
+```
+
+Access services:
+- **Frontend Web Application**: [http://localhost](http://localhost) (Port 80)
+- **Backend API & Health Probe**: [http://localhost:3001/health](http://localhost:3001/health) (Port 3001)
+
+To view logs:
+```bash
+docker compose logs -f
+```
+
+To stop containers:
+```bash
+docker compose down
+```
+
+---
+
+## 💻 Local Development Setup
+
+### Prerequisites
+- **Node.js**: v20 LTS or higher
+- **Python**: 3.9+ (Optional, for local Python execution sandbox)
+- **npm** or **pnpm**
+
+### Step-by-Step
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start Frontend Dev Server (Vite)
+npm run dev
+
+# 3. In a separate terminal, start the Backend Service
+npm run server
+```
+
+The application will be live at:
+- Frontend: `http://localhost:5173/`
+- Backend: `http://localhost:3001/`
+
+---
+
+## 🧪 Production Verification & Build
+
+```bash
+# Typecheck with zero TypeScript errors
+npx tsc --noEmit
+
+# Execute production build
+npm run build
+```
+
+---
+
+## 🌐 Environment Variables
+
+Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `NODE_ENV` | `production` | Runtime mode (`development` / `production`). |
+| `PORT` | `3001` | Express backend port. |
+| `CORS_ORIGIN` | `*` | Allowed CORS origins (comma-separated for production). |
+| `VITE_API_BASE_URL` | `http://localhost:3001` | Backend URL used by frontend. |
+| `GEMINI_API_KEY` | *(Empty)* | Optional Google Gemini API key. |
+| `OPENAI_API_KEY` | *(Empty)* | Optional OpenAI API key. |
+
+---
+
+## 🛡️ Production Security Standards
+
+1. **Security Headers**: Express backend employs `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection`, and `Referrer-Policy`.
+2. **Rate Limiting**: In-memory rate limiter configured at 120 requests/minute per IP with automatic memory cleanup.
+3. **Execution Sandbox**: Subprocess execution enforces strict timeouts (4.5s), buffer caps (512KB), and filters dangerous system calls (`os.system`, `execSync`).
+4. **Nginx Security**: Static assets served with immutable 1-year caching; fallback SPA routing protects against directory traversal.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
