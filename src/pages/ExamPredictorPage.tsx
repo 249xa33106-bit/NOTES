@@ -685,9 +685,15 @@ export const ExamPredictorPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            navigate('/generate');
+                            const query = new URLSearchParams({
+                              subject: report.subject,
+                              topic: q.topic || q.question.slice(0, 70),
+                              unit: q.chapterOrUnit,
+                            }).toString();
+                            navigate(`/generate?${query}`);
                           }}
-                          className="text-xs text-slate-600 hover:text-indigo-600 font-medium flex items-center gap-1 transition"
+                          className="text-xs text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 font-semibold px-2.5 py-1 rounded-md border border-indigo-200 flex items-center gap-1 transition"
+                          title="Generate complete textbook notes for this exact predicted question"
                         >
                           <span>Generate Notes for this Topic</span>
                           <ArrowRight size={13} />
@@ -1026,6 +1032,28 @@ export const ExamPredictorPage: React.FC = () => {
                     <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
                       <span className="font-bold text-slate-900 block mb-1">Standard University Model Answer:</span>
                       <FormattedMathText text={pyq.modelAnswer} />
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-100">
+                      <span className="text-[11px] text-slate-400">
+                        Frequency: Repeated in {pyq.appearedYears.length} university examination sessions
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const query = new URLSearchParams({
+                            subject: report.subject,
+                            topic: pyq.topic || pyq.question.slice(0, 70),
+                            unit: pyq.chapterOrUnit,
+                          }).toString();
+                          navigate(`/generate?${query}`);
+                        }}
+                        className="text-xs text-indigo-700 bg-indigo-50/80 hover:bg-indigo-100 font-semibold px-2.5 py-1 rounded-md border border-indigo-200 flex items-center gap-1 transition"
+                        title="Generate complete textbook notes for this exact PYQ"
+                      >
+                        <span>Generate Notes for this PYQ</span>
+                        <ArrowRight size={13} />
+                      </button>
                     </div>
                   </div>
                 ))}

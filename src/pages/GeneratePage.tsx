@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Sparkles,
   BookOpen,
@@ -30,6 +30,7 @@ import { ExtractedDocument } from '../services/documentParser';
 
 export const GeneratePage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Form State
   const [subject, setSubject] = useState('Computer Science & Engineering');
@@ -40,6 +41,16 @@ export const GeneratePage: React.FC = () => {
   const [language, setLanguage] = useState('English');
   const [examFormat, setExamFormat] = useState<ExamFormat>('Semester Exam Format (2, 5, 10 marks)');
   const [preferredLanguage, setPreferredLanguage] = useState<ProgrammingLanguage>('Python');
+
+  // Handle URL query parameters for cross-portal prefill (e.g. from Exam Predictor)
+  useEffect(() => {
+    const subParam = searchParams.get('subject');
+    const topParam = searchParams.get('topic');
+    const unitParam = searchParams.get('unit');
+    if (subParam) setSubject(subParam);
+    if (topParam) setTopic(topParam);
+    if (unitParam) setSyllabusOrUnit(unitParam);
+  }, [searchParams]);
 
   // Toggles
   const [includeDiagrams, setIncludeDiagrams] = useState(true);
