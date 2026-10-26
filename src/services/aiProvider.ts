@@ -163,8 +163,22 @@ export const aiProvider = {
     let domainEquation = 'T(n) = \\alpha \\cdot T\\left(\\frac{n}{\\beta}\\right) + f(n)';
     let domainCaption = 'Standard Recurrence Relation & Bound';
     if (isMath) {
-      domainEquation = '\\det(A - \\lambda I) = 0 \\quad \\implies \\quad A v = \\lambda v';
-      domainCaption = 'Characteristic Equation for Eigenvalues & Eigenvectors';
+      if (subjectLower.includes('calculus') || subjectLower.includes('integral') || subjectLower.includes('derivative')) {
+        domainEquation = '\\int_{a}^{b} f(x) \\, dx = F(b) - F(a) \\quad \\text{where } F\'(x) = f(x)';
+        domainCaption = 'Fundamental Theorem of Calculus & Definite Integration';
+      } else if (subjectLower.includes('differential') || subjectLower.includes('ode') || subjectLower.includes('pde')) {
+        domainEquation = '\\frac{d^2 y}{dx^2} + P(x)\\frac{dy}{dx} + Q(x)y = R(x)';
+        domainCaption = 'General Form of Second-Order Linear Differential Equation';
+      } else if (subjectLower.includes('prob') || subjectLower.includes('stat') || subjectLower.includes('bayes')) {
+        domainEquation = 'P(A \\mid B) = \\frac{P(B \\mid A) \\cdot P(A)}{P(B)} = \\frac{P(B \\mid A) P(A)}{\\sum_i P(B \\mid A_i) P(A_i)}';
+        domainCaption = 'Bayes\' Theorem of Conditional Probability';
+      } else if (subjectLower.includes('fourier') || subjectLower.includes('laplace') || subjectLower.includes('transform')) {
+        domainEquation = '\\mathcal{L}\\{f(t)\\} = F(s) = \\int_{0}^{\\infty} e^{-st} f(t) \\, dt';
+        domainCaption = 'One-Sided Laplace Integral Transform';
+      } else {
+        domainEquation = '\\det(A - \\lambda I) = 0 \\quad \\implies \\quad A \\mathbf{v} = \\lambda \\mathbf{v}';
+        domainCaption = 'Characteristic Equation for Eigenvalues & Eigenvectors';
+      }
     } else if (isPhysics || isMechanical) {
       domainEquation = '\\Delta U = Q - W \\quad \\text{and} \\quad \\eta = 1 - \\frac{T_C}{T_H}';
       domainCaption = 'First & Second Laws of Thermodynamics (Carnot Efficiency)';
@@ -264,8 +278,10 @@ export const aiProvider = {
             id: 'b-math-callout',
             type: 'callout',
             variant: 'formula',
-            title: 'Theorem & Formal Proof Outline',
-            content: `**Theorem**: In any stable system governed by ${topic}, conservation of fundamental equilibrium holds under boundary constraints.\n\n**Proof Outline**:\n1. **Base Assumption**: State the boundary conditions at initial state $t=0$.\n2. **Differential Step**: Apply the governing conservation equation across incremental change $dt$ or discrete index $k$.\n3. **Integration / Summation**: Integrating across the operational interval demonstrates that state variance is strictly bounded.\n4. **Conclusion**: The property is mathematically sound and universally verifiable across all continuous/discrete domains (Q.E.D.).`,
+            title: isMath ? 'Core Theorem & Step-by-Step Analytical Proof' : 'Theorem & Formal Proof Outline',
+            content: isMath
+              ? `**Fundamental Theorem**: For any linear operator or function space governed by ${topic}, the solution space has dimension equal to the order of the system, and all orthogonal projections minimize mean squared error.\n\n**Formal Step-by-Step Proof**:\n1. **Axiomatic Setup**: Let $V$ be an inner product space over $\\mathbb{R}$, and assume boundary constraints at initial condition $x_0$.\n2. **Linearity & Invariance**: By the principle of superposition, $L[c_1 y_1 + c_2 y_2] = c_1 L[y_1] + c_2 L[y_2] = 0$.\n3. **Spectral Decomposition**: Evaluating the characteristic determinant $\\det(A - \\lambda I) = 0$ yields eigenvalues $\\lambda_i$ and linearly independent eigenvectors $\\mathbf{v}_i$.\n4. **Uniqueness Verification**: Suppose two distinct solutions $y_1$ and $y_2$ exist. Let $w = y_1 - y_2$. Since $L[w] = 0$ with null boundary conditions, the Dirichlet energy integral $\\int |\\nabla w|^2 dx = 0 \\implies w \\equiv 0 \\implies y_1 = y_2$ (Q.E.D.).`
+              : `**Theorem**: In any stable system governed by ${topic}, conservation of fundamental equilibrium holds under boundary constraints.\n\n**Proof Outline**:\n1. **Base Assumption**: State the boundary conditions at initial state $t=0$.\n2. **Differential Step**: Apply the governing conservation equation across incremental change $dt$ or discrete index $k$.\n3. **Integration / Summation**: Integrating across the operational interval demonstrates that state variance is strictly bounded.\n4. **Conclusion**: The property is mathematically sound and universally verifiable across all continuous/discrete domains (Q.E.D.).`,
           },
         ],
       },
