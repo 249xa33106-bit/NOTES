@@ -299,6 +299,62 @@ export const GeneratePage: React.FC = () => {
               >
                 📐 Linear Algebra & Eigenvalues
               </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickTopic(
+                    'Electrical Engineering',
+                    'Circuit Theory — Transient Analysis of RLC Networks',
+                    'Unit 2: Second-Order Dynamic Circuits',
+                    'None (Theoretical / Non-Code)'
+                  )
+                }
+                className="text-[11px] px-2.5 py-1 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 transition border border-slate-200"
+              >
+                ⚡ Electrical — RLC Circuits
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickTopic(
+                    'Mechanical Engineering',
+                    'Thermodynamics — Second Law, Carnot Cycles & Entropy',
+                    'Unit 3: Heat Engines and Entropy Generation',
+                    'None (Theoretical / Non-Code)'
+                  )
+                }
+                className="text-[11px] px-2.5 py-1 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 transition border border-slate-200"
+              >
+                ⚙️ Mechanical — Thermodynamics
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickTopic(
+                    'Biological Sciences',
+                    'Molecular Biology — DNA Replication & Transcription',
+                    'Unit 1: Genetic Information Transfer',
+                    'None (Theoretical / Non-Code)'
+                  )
+                }
+                className="text-[11px] px-2.5 py-1 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 transition border border-slate-200"
+              >
+                🧬 Biology — DNA Replication
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickTopic(
+                    'Economics & Business',
+                    'Corporate Finance — Capital Budgeting, NPV & IRR',
+                    'Unit 4: Investment Valuation Models',
+                    'None (Theoretical / Non-Code)'
+                  )
+                }
+                className="text-[11px] px-2.5 py-1 rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 transition border border-slate-200"
+              >
+                📈 Finance — NPV & Capital Budgeting
+              </button>
             </div>
           </div>
         </div>
