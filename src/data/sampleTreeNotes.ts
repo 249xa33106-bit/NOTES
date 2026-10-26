@@ -69,16 +69,16 @@ export const SAMPLE_TREE_NOTES: NoteDocument = {
           type: 'diagram',
           diagramType: 'mermaid',
           source: `graph TD
-    Root["Root Node (A) - Level 0, Height 3"] --> B["Internal Node (B) - Level 1"]
-    Root --> C["Internal Node (C) - Level 1"]
-    B --> D["Leaf Node (D) - Level 2, Degree 0"]
-    B --> E["Internal Node (E) - Level 2"]
-    C --> F["Leaf Node (F) - Level 2"]
-    C --> G["Internal Node (G) - Level 2"]
-    E --> H["Leaf Node (H) - Level 3"]
-    G --> I["Leaf Node (I) - Level 3"]
+    Root["Root Node A - Level 0, Height 3"] --> B["Internal Node B - Level 1"]
+    Root --> C["Internal Node C - Level 1"]
+    B --> D["Leaf Node D - Level 2, Degree 0"]
+    B --> E["Internal Node E - Level 2"]
+    C --> F["Leaf Node F - Level 2"]
+    C --> G["Internal Node G - Level 2"]
+    E --> H["Leaf Node H - Level 3"]
+    G --> I["Leaf Node I - Level 3"]
 
-    style Root fill:#e0e7ff,stroke:#4f46e5,stroke-width:2px,color:#1e1b4b
+    style Root fill:#e0e7ff,stroke:#4f46e5,stroke-width:2px
     style B fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
     style C fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px
     style D fill:#dcfce7,stroke:#16a34a,stroke-width:1.5px
@@ -127,34 +127,34 @@ export const SAMPLE_TREE_NOTES: NoteDocument = {
           type: 'diagram',
           diagramType: 'mermaid',
           source: `graph TD
-    subgraph Full_Binary_Tree["1. Full / Strict Binary Tree"]
-        F1((1)) --> F2((2))
-        F1 --> F3((3))
-        F2 --> F4((4))
-        F2 --> F5((5))
+    subgraph Full_Binary_Tree["Full or Strict Binary Tree"]
+        F1["1"] --> F2["2"]
+        F1 --> F3["3"]
+        F2 --> F4["4"]
+        F2 --> F5["5"]
     end
 
-    subgraph Complete_Binary_Tree["2. Complete Binary Tree"]
-        C1((1)) --> C2((2))
-        C1 --> C3((3))
-        C2 --> C4((4))
-        C2 --> C5((5))
-        C3 --> C6((6))
+    subgraph Complete_Binary_Tree["Complete Binary Tree"]
+        C1["1"] --> C2["2"]
+        C1 --> C3["3"]
+        C2 --> C4["4"]
+        C2 --> C5["5"]
+        C3 --> C6["6"]
     end
 
-    subgraph Perfect_Binary_Tree["3. Perfect Binary Tree"]
-        P1((1)) --> P2((2))
-        P1 --> P3((3))
-        P2 --> P4((4))
-        P2 --> P5((5))
-        P3 --> P6((6))
-        P3 --> P7((7))
+    subgraph Perfect_Binary_Tree["Perfect Binary Tree"]
+        P1["1"] --> P2["2"]
+        P1 --> P3["3"]
+        P2 --> P4["4"]
+        P2 --> P5["5"]
+        P3 --> P6["6"]
+        P3 --> P7["7"]
     end
 
-    subgraph Skewed_Binary_Tree["4. Degenerate / Skewed Tree"]
-        S1((1)) --> S2((2))
-        S2 --> S3((3))
-        S3 --> S4((4))
+    subgraph Skewed_Binary_Tree["Degenerate or Skewed Tree"]
+        S1["1"] --> S2["2"]
+        S2 --> S3["3"]
+        S3 --> S4["4"]
     end
 
     style Full_Binary_Tree fill:#f8fafc,stroke:#94a3b8
@@ -265,12 +265,12 @@ export const SAMPLE_TREE_NOTES: NoteDocument = {
           type: 'diagram',
           diagramType: 'mermaid',
           source: `graph TD
-    T4((4)) --> T2((2))
-    T4 --> T6((6))
-    T2 --> T1((1))
-    T2 --> T3((3))
-    T6 --> T5((5))
-    T6 --> T7((7))
+    T4["4"] --> T2["2"]
+    T4 --> T6["6"]
+    T2 --> T1["1"]
+    T2 --> T3["3"]
+    T6 --> T5["5"]
+    T6 --> T7["7"]
 
     style T4 fill:#dbeafe,stroke:#2563eb,stroke-width:2px
     style T2 fill:#ede9fe,stroke:#7c3aed,stroke-width:1.5px
@@ -366,11 +366,11 @@ Level-Order (BFS):     [4, 2, 6, 1, 3, 5, 7]`,
           type: 'diagram',
           diagramType: 'mermaid',
           source: `flowchart TD
-    Start([Delete Node Z]) --> Check{How many children does Z have?}
-    Check -- 0 Children --> Case1[Case 1: Leaf Node<br/>Simply set parent's pointer to NULL and free Z]
-    Check -- 1 Child --> Case2[Case 2: One Child<br/>Bypass Z: Link parent directly to Z's child and free Z]
-    Check -- 2 Children --> Case3[Case 3: Two Children<br/>1. Find Inorder Successor S (min in right subtree)<br/>2. Copy S.val to Z.val<br/>3. Recursively delete S from right subtree]
-    Case1 --> End([Done: BST Property Maintained])
+    Start(["Delete Node Z"]) --> Check{"Children of Node Z?"}
+    Check -- "0 Children" --> Case1["Case 1: Leaf Node<br/>Set parent pointer to NULL and free Z"]
+    Check -- "1 Child" --> Case2["Case 2: One Child<br/>Link parent directly to single child and free Z"]
+    Check -- "2 Children" --> Case3["Case 3: Two Children<br/>1. Find Inorder Successor S<br/>2. Copy S key to Z<br/>3. Delete S from right subtree"]
+    Case1 --> End(["Done: BST Property Maintained"])
     Case2 --> End
     Case3 --> End
 
@@ -512,36 +512,36 @@ After deleting root 50:     [40, 60, 70, 80]`,
           type: 'diagram',
           diagramType: 'mermaid',
           source: `graph TD
-    subgraph LL_Rotation["1. LL Rotation (Right Rotation)"]
-        LL_Z((Z: +2)) --> LL_Y((Y: +1))
-        LL_Y --> LL_X((X))
-        LL_Arrow[Apply Right Rotate on Z] --> LL_Res((Y: 0))
-        LL_Res --> LL_ResX((X))
-        LL_Res --> LL_ResZ((Z: 0))
+    subgraph LL_Rotation["1. LL Rotation - Single Right Rotate"]
+        LL_Z["Node Z (BF: +2)"] --> LL_Y["Node Y (BF: +1)"]
+        LL_Y --> LL_X["Node X"]
+        LL_Action["Apply Right Rotate on Z"] --> LL_Res["Node Y (BF: 0)"]
+        LL_Res --> LL_ResX["Node X"]
+        LL_Res --> LL_ResZ["Node Z (BF: 0)"]
     end
 
-    subgraph RR_Rotation["2. RR Rotation (Left Rotation)"]
-        RR_Z((Z: -2)) --> RR_Y((Y: -1))
-        RR_Y --> RR_X((X))
-        RR_Arrow[Apply Left Rotate on Z] --> RR_Res((Y: 0))
-        RR_Res --> RR_ResZ((Z: 0))
-        RR_Res --> RR_ResX((X))
+    subgraph RR_Rotation["2. RR Rotation - Single Left Rotate"]
+        RR_Z["Node Z (BF: -2)"] --> RR_Y["Node Y (BF: -1)"]
+        RR_Y --> RR_X["Node X"]
+        RR_Action["Apply Left Rotate on Z"] --> RR_Res["Node Y (BF: 0)"]
+        RR_Res --> RR_ResZ["Node Z (BF: 0)"]
+        RR_Res --> RR_ResX["Node X"]
     end
 
-    subgraph LR_Rotation["3. LR Rotation (Left then Right)"]
-        LR_Z((Z: +2)) --> LR_Y((Y: -1))
-        LR_Y --> LR_X((X))
-        LR_Arrow[1. Left Rotate Y<br/>2. Right Rotate Z] --> LR_Res((X: 0))
-        LR_Res --> LR_ResY((Y))
-        LR_Res --> LR_ResZ((Z))
+    subgraph LR_Rotation["3. LR Rotation - Double Rotate"]
+        LR_Z["Node Z (BF: +2)"] --> LR_Y["Node Y (BF: -1)"]
+        LR_Y --> LR_X["Node X"]
+        LR_Action["1. Left Rotate Y<br/>2. Right Rotate Z"] --> LR_Res["Node X (BF: 0)"]
+        LR_Res --> LR_ResY["Node Y"]
+        LR_Res --> LR_ResZ["Node Z"]
     end
 
-    subgraph RL_Rotation["4. RL Rotation (Right then Left)"]
-        RL_Z((Z: -2)) --> RL_Y((Y: +1))
-        RL_Y --> RL_X((X))
-        RL_Arrow[1. Right Rotate Y<br/>2. Left Rotate Z] --> RL_Res((X: 0))
-        RL_Res --> RL_ResZ((Z))
-        RL_Res --> RL_ResY((Y))
+    subgraph RL_Rotation["4. RL Rotation - Double Rotate"]
+        RL_Z["Node Z (BF: -2)"] --> RL_Y["Node Y (BF: +1)"]
+        RL_Y --> RL_X["Node X"]
+        RL_Action["1. Right Rotate Y<br/>2. Left Rotate Z"] --> RL_Res["Node X (BF: 0)"]
+        RL_Res --> RL_ResZ["Node Z"]
+        RL_Res --> RL_ResY["Node Y"]
     end
 
     style LL_Rotation fill:#f8fafc,stroke:#93c5fd

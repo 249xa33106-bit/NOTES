@@ -17,6 +17,7 @@ const initMermaid = () => {
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: 'loose',
+      suppressErrorRendering: true,
       theme: 'neutral',
       themeVariables: {
         fontFamily: 'Inter, sans-serif',
@@ -59,15 +60,33 @@ export const MermaidViewer: React.FC<MermaidViewerProps> = ({
     setIsRendering(true);
     setError(null);
 
+    const cleanCode = codeToRender.trim();
+    if (!cleanCode) {
+      setIsRendering(false);
+      return;
+    }
+
+    const renderId = `m_${uniqueId}_${Date.now()}`;
+    // Clean any prior DOM artifact
     try {
-      const renderId = `mermaid_diag_${uniqueId}_${Date.now()}`;
-      const { svg } = await mermaid.render(renderId, codeToRender);
+      const prior = document.getElementById(renderId);
+      if (prior) prior.remove();
+      const priorErr = document.getElementById(`d${renderId}`);
+      if (priorErr) priorErr.remove();
+    } catch (e) {}
+
+    try {
+      const { svg } = await mermaid.render(renderId, cleanCode);
       setSvgHtml(svg);
       setError(null);
     } catch (err: any) {
       console.warn('Mermaid render error:', err);
+      // Clean residual error element injected by mermaid into document.body
+      try {
+        const injected = document.getElementById(`d${renderId}`);
+        if (injected) injected.remove();
+      } catch (e) {}
       setError(err?.message || 'Invalid diagram syntax. Please check Mermaid code.');
-      // Keep previous SVG if available or clear
     } finally {
       setIsRendering(false);
     }

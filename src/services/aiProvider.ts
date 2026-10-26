@@ -233,11 +233,11 @@ export const aiProvider = {
             type: 'diagram',
             diagramType: 'mermaid',
             source: `flowchart TD
-    Init([Input Query / State: ${topic}]) --> Validate{Validation Check}
-    Validate -- Valid --> Process[Core Processing Engine]
-    Validate -- Invalid --> Error[Raise Exception & Graceful Fallback]
-    Process --> Optimize[Optimization & Invariant Enforcement]
-    Optimize --> Output([Final Verified State / Result])
+    Init(["Input Query: ${topic.replace(/["\\(\\)\\[\\]\\{\\}]/g, '')}"]) --> Validate{"Validation Check"}
+    Validate -- "Valid" --> Process["Core Processing Engine"]
+    Validate -- "Invalid" --> Error["Raise Exception & Graceful Fallback"]
+    Process --> Optimize["Optimization & Invariant Enforcement"]
+    Optimize --> Output(["Final Verified Result"])
 
     style Init fill:#e0e7ff,stroke:#4f46e5,stroke-width:2px
     style Validate fill:#fef3c7,stroke:#d97706

@@ -41,11 +41,12 @@ export const storageService = {
 
   // Get single note by id
   getNoteById(id: string): NoteDocument | null {
-    const notes = this.getAllNotes();
-    const found = notes.find((n) => n.id === id);
-    if (!found && id === SAMPLE_TREE_NOTES.id) {
+    if (id === SAMPLE_TREE_NOTES.id) {
+      // Always ensure verified sample notes are current
       return SAMPLE_TREE_NOTES;
     }
+    const notes = this.getAllNotes();
+    const found = notes.find((n) => n.id === id);
     return found || null;
   },
 
