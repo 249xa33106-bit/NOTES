@@ -538,6 +538,12 @@ export const GeneratePage: React.FC = () => {
           <SyllabusUploader
             onExtracted={handleSyllabusExtracted}
             onClear={handleClearSyllabus}
+            onSelectUnit={(unitTitle, topics) => {
+              setSyllabusOrUnit(unitTitle);
+              if (topics && topics.length > 0) {
+                setTopic(topics[0]);
+              }
+            }}
           />
         </div>
 

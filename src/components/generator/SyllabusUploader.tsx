@@ -5,11 +5,13 @@ import { documentParser, ExtractedDocument } from '../../services/documentParser
 interface SyllabusUploaderProps {
   onExtracted: (doc: ExtractedDocument) => void;
   onClear: () => void;
+  onSelectUnit?: (unitTitle: string, topics?: string[]) => void;
 }
 
 export const SyllabusUploader: React.FC<SyllabusUploaderProps> = ({
   onExtracted,
   onClear,
+  onSelectUnit,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -154,12 +156,16 @@ export const SyllabusUploader: React.FC<SyllabusUploaderProps> = ({
                   </span>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
                     {extractedDoc.units.map((u, i) => (
-                      <span
+                      <button
                         key={i}
-                        className="text-[11px] bg-white border border-indigo-200 text-indigo-900 px-2 py-0.5 rounded-md font-medium"
+                        type="button"
+                        onClick={() => onSelectUnit?.(u.unitTitle, u.topics)}
+                        className="text-[11px] bg-white hover:bg-indigo-600 hover:text-white border border-indigo-200 text-indigo-900 px-2 py-0.5 rounded-md font-medium transition cursor-pointer flex items-center gap-1 shadow-xs"
+                        title="Click to generate notes for this chapter"
                       >
-                        {u.unitTitle}
-                      </span>
+                        <span>{u.unitTitle}</span>
+                        <span className="text-[9px] opacity-70">↗</span>
+                      </button>
                     ))}
                   </div>
                 </div>
