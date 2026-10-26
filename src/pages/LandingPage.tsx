@@ -17,6 +17,7 @@ import {
   FileText,
   Workflow,
   Cpu,
+  Target,
 } from 'lucide-react';
 import { SAMPLE_TREE_NOTES } from '../data/sampleTreeNotes';
 
@@ -61,11 +62,19 @@ export const LandingPage: React.FC = () => {
             </Link>
 
             <Link
+              to="/predict"
+              className="w-full sm:w-auto px-7 py-3.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <Target size={16} />
+              <span>Exam Predictor & PYQ</span>
+            </Link>
+
+            <Link
               to={`/notes/${SAMPLE_TREE_NOTES.id}`}
               className="w-full sm:w-auto px-7 py-3.5 bg-white hover:bg-slate-50 text-slate-800 font-semibold rounded-xl border border-slate-200 shadow-xs hover:border-slate-300 transition-all flex items-center justify-center gap-2 text-sm"
             >
               <BookOpen size={16} className="text-indigo-600" />
-              <span>Explore Verified Sample (B.Tech Trees)</span>
+              <span>Explore Benchmark</span>
             </Link>
           </div>
 

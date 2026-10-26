@@ -4,6 +4,7 @@ import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
 import { LandingPage } from './pages/LandingPage';
 import { GeneratePage } from './pages/GeneratePage';
+import { ExamPredictorPage } from './pages/ExamPredictorPage';
 import { NotesReaderEditor } from './pages/NotesReaderEditor';
 import { LibraryPage } from './pages/LibraryPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -23,6 +24,7 @@ export const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/generate" element={<GeneratePage />} />
+            <Route path="/predict" element={<ExamPredictorPage />} />
             <Route path="/notes/:id" element={<NotesReaderEditor />} />
             <Route path="/library" element={<LibraryPage />} />
             <Route path="/settings" element={<SettingsPage />} />

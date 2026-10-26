@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, Sparkles, FolderArchive, Settings, Plus, GraduationCap } from 'lucide-react';
+import { BookOpen, Sparkles, FolderArchive, Settings, Plus, GraduationCap, Target } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const location = useLocation();
@@ -8,6 +8,7 @@ export const Header: React.FC = () => {
   const navLinks = [
     { path: '/', label: 'Overview' },
     { path: '/generate', label: 'Generate Notes', icon: Sparkles },
+    { path: '/predict', label: 'PYQ & Exam Predictor', icon: Target },
     { path: '/library', label: 'Study Library', icon: FolderArchive },
     { path: '/settings', label: 'AI Settings', icon: Settings },
   ];
