@@ -20,6 +20,11 @@ import {
   ArrowRight,
   GraduationCap,
   Percent,
+  Flame,
+  Check,
+  Send,
+  RotateCcw,
+  ShieldAlert,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import {
@@ -27,6 +32,7 @@ import {
   ExamPredictionReport,
   PredictedQuestion,
   PYQQuestion,
+  AnswerEvaluationResult,
 } from '../services/examPredictorService';
 import { FormattedMathText } from '../components/renderers/KaTeXViewer';
 import { documentParser, ExtractedDocument } from '../services/documentParser';
@@ -43,13 +49,23 @@ export const ExamPredictorPage: React.FC = () => {
   const [pastPaperText, setPastPaperText] = useState('');
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
 
+  // Strategy Mode
+  const [strategyMode, setStrategyMode] = useState<'all' | 'pass_guarantee' | 'ranker'>('all');
+
   // UI States
   const [isLoading, setIsLoading] = useState(false);
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
   const [report, setReport] = useState<ExamPredictionReport | null>(null);
-  const [activeTab, setActiveTab] = useState<'predicted' | 'pyq' | 'weightage' | 'tips'>('predicted');
+  const [activeTab, setActiveTab] = useState<'predicted' | 'model_paper' | 'pyq' | 'weightage' | 'tips'>('predicted');
   const [selectedMarksFilter, setSelectedMarksFilter] = useState<'all' | '2' | '5' | '10'>('all');
   const [selectedYearFilter, setSelectedYearFilter] = useState<string>('all');
   const [expandedQuestionIds, setExpandedQuestionIds] = useState<Record<string, boolean>>({});
+
+  // Practice / Self-Test Mode States
+  const [practiceQuestionId, setPracticeQuestionId] = useState<string | null>(null);
+  const [studentAnswerText, setStudentAnswerText] = useState('');
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evaluationResult, setEvaluationResult] = useState<AnswerEvaluationResult | null>(null);
 
   const handleFileUpload = async (file: File) => {
     try {
@@ -70,6 +86,8 @@ export const ExamPredictorPage: React.FC = () => {
 
     setIsLoading(true);
     setReport(null);
+    setPracticeQuestionId(null);
+    setEvaluationResult(null);
 
     try {
       const result = await examPredictorService.generatePrediction({
@@ -82,7 +100,6 @@ export const ExamPredictorPage: React.FC = () => {
       });
 
       setReport(result);
-      // Auto expand the top predicted question
       if (result.predictedQuestions.length > 0) {
         setExpandedQuestionIds({ [result.predictedQuestions[0].id]: true });
       }
@@ -112,18 +129,64 @@ export const ExamPredictorPage: React.FC = () => {
     setTargetChapter(chap);
   };
 
-  const filteredPredictedQuestions = report?.predictedQuestions.filter((q) => {
+  const handleStartPractice = (qId: string) => {
+    setPracticeQuestionId(qId);
+    setStudentAnswerText('');
+    setEvaluationResult(null);
+  };
+
+  const handleEvaluateAnswer = (question: PredictedQuestion) => {
+    if (!studentAnswerText.trim()) return;
+    setIsEvaluating(true);
+
+    setTimeout(() => {
+      const res = examPredictorService.evaluateStudentAnswer(question, studentAnswerText);
+      setEvaluationResult(res);
+      setIsEvaluating(false);
+
+      if (res.percentage >= 70) {
+        confetti({
+          particleCount: 50,
+          spread: 45,
+          origin: { y: 0.7 },
+        });
+      }
+    }, 600);
+  };
+
+  const handleExportDocx = async () => {
+    if (!report) return;
+    setIsExportingDocx(true);
+    try {
+      await examPredictorService.exportModelPaperToDocx(report);
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setIsExportingDocx(false);
+    }
+  };
+
+  // Filter questions by marks & strategy
+  const filteredPredictedQuestions = (report?.predictedQuestions || []).filter((q) => {
+    // Strategy Filter
+    if (strategyMode === 'pass_guarantee') {
+      if (q.probabilityScore < 90) return false;
+    } else if (strategyMode === 'ranker') {
+      if (q.marks < 5) return false;
+    }
+
+    // Marks Filter
     if (selectedMarksFilter === 'all') return true;
     if (selectedMarksFilter === '2') return q.marks === 2;
     if (selectedMarksFilter === '5') return q.marks === 5;
     if (selectedMarksFilter === '10') return q.marks >= 10;
     return true;
-  }) || [];
+  });
 
-  const filteredPyqQuestions = report?.pyqBank.filter((q) => {
+  const filteredPyqQuestions = (report?.pyqBank || []).filter((q) => {
     if (selectedYearFilter === 'all') return true;
     return q.appearedYears.includes(Number(selectedYearFilter));
-  }) || [];
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -131,13 +194,13 @@ export const ExamPredictorPage: React.FC = () => {
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold mb-3">
           <Target size={14} className="text-emerald-600" />
-          <span>AI Exam Question Predictor & PYQ Analytics</span>
+          <span>Advanced AI Question Predictor & Previous Question Papers (PYQ) Engine</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          Predicted University Exam Questions & Past Papers
+          University Exam Question Predictor & PYQ Portal
         </h1>
         <p className="mt-2 text-slate-500 text-sm sm:text-base max-w-2xl mx-auto">
-          Analyze past 5-10 year question papers (PYQs) using recurrence pattern modeling to predict high-probability questions with model answers and examiner marking rubrics.
+          Deep probabilistic recurrence modeling across 5-10 year university archives. Generates 100-mark model question papers, model solutions, examiner rubrics, and interactive answer evaluations.
         </p>
       </div>
 
@@ -145,7 +208,7 @@ export const ExamPredictorPage: React.FC = () => {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 mb-10">
         <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3 mb-6">
           <BookOpen size={16} className="text-indigo-600" />
-          <span>Configure Subject & Examination Target</span>
+          <span>1. Configure Subject, University & Curriculum Details</span>
         </h2>
 
         <form onSubmit={handlePredict} className="space-y-6">
@@ -200,7 +263,7 @@ export const ExamPredictorPage: React.FC = () => {
                 <option value="Mumbai University / Pune University (SPPU)">
                   Mumbai / Pune University
                 </option>
-                <option value="GATE / GRE / Competitive Examination">GATE / National Exam</option>
+                <option value="GATE / GRE / National Competitive Exam">GATE / National Exam</option>
                 <option value="CBSE / ISC / State Board (Class 11-12)">CBSE / Class 12 Board</option>
                 <option value="Autonomous University / Custom College">Custom Autonomous College</option>
               </select>
@@ -271,7 +334,7 @@ export const ExamPredictorPage: React.FC = () => {
           {/* Optional Past Paper Upload or Paste */}
           <div className="pt-2 border-t border-slate-100">
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Upload Previous Question Papers (PDF/DOCX) or Paste Past Exam Questions (Optional)
+              Upload Past Question Papers (PDF/DOCX) or Paste Past Exam Questions (Optional)
             </label>
             <div className="flex flex-col sm:flex-row gap-3">
               <label className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50/50 hover:bg-indigo-50/30 cursor-pointer transition text-xs font-medium text-slate-600">
@@ -388,6 +451,65 @@ export const ExamPredictorPage: React.FC = () => {
             </div>
           </div>
 
+          {/* Strategy Mode Filter Chips */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Flame size={14} className="text-amber-500" />
+                <span>Exam Strategy Filter:</span>
+              </span>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setStrategyMode('all')}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition ${
+                    strategyMode === 'all'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  }`}
+                >
+                  All Questions
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStrategyMode('pass_guarantee')}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1 ${
+                    strategyMode === 'pass_guarantee'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                  }`}
+                >
+                  <ShieldAlert size={12} />
+                  <span>Guaranteed Pass Mode (50+ M)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStrategyMode('ranker')}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition flex items-center gap-1 ${
+                    strategyMode === 'ranker'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'bg-purple-50 text-purple-800 border border-purple-200 hover:bg-purple-100'
+                  }`}
+                >
+                  <Award size={12} />
+                  <span>Distinction / 90%+ Ranker</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExportDocx}
+                disabled={isExportingDocx}
+                className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 flex items-center gap-1.5 transition"
+              >
+                <Download size={13} />
+                <span>{isExportingDocx ? 'Exporting...' : 'Export 100M Paper (.docx)'}</span>
+              </button>
+            </div>
+          </div>
+
           {/* Navigation Tabs */}
           <div className="flex items-center justify-between border-b border-slate-200">
             <div className="flex gap-2 sm:gap-6 overflow-x-auto">
@@ -401,7 +523,20 @@ export const ExamPredictorPage: React.FC = () => {
                 }`}
               >
                 <Target size={16} />
-                <span>Predicted Questions ({report.predictedQuestions.length})</span>
+                <span>Predicted Questions ({filteredPredictedQuestions.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('model_paper')}
+                className={`py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${
+                  activeTab === 'model_paper'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <Award size={16} />
+                <span>🏛️ 100-Mark University Model Paper</span>
               </button>
 
               <button
@@ -427,7 +562,7 @@ export const ExamPredictorPage: React.FC = () => {
                 }`}
               >
                 <TrendingUp size={16} />
-                <span>Chapter Weightage Blueprint</span>
+                <span>Unit Weightage Blueprint</span>
               </button>
 
               <button
@@ -481,6 +616,8 @@ export const ExamPredictorPage: React.FC = () => {
               <div className="space-y-5">
                 {filteredPredictedQuestions.map((q, idx) => {
                   const isExpanded = !!expandedQuestionIds[q.id];
+                  const isPracticing = practiceQuestionId === q.id;
+
                   return (
                     <div
                       key={q.id}
@@ -524,16 +661,26 @@ export const ExamPredictorPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Expandable Model Answer & Scoring Rubric */}
-                      <div className="px-5 py-3 bg-slate-50 flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() => toggleExpand(q.id)}
-                          className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1.5"
-                        >
-                          <span>{isExpanded ? 'Hide Model Answer & Rubric' : 'View Step-by-Step Model Answer & Scoring Rubric'}</span>
-                          {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        </button>
+                      {/* Action Bar */}
+                      <div className="px-5 py-3 bg-slate-50 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => toggleExpand(q.id)}
+                            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1.5"
+                          >
+                            <span>{isExpanded ? 'Hide Model Answer & Rubric' : 'View Step-by-Step Model Answer & Scoring Rubric'}</span>
+                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleStartPractice(q.id)}
+                            className="text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-md border border-emerald-200 transition flex items-center gap-1"
+                          >
+                            <span>✍️ Test Myself / Practice Answering</span>
+                          </button>
+                        </div>
 
                         <button
                           type="button"
@@ -542,14 +689,119 @@ export const ExamPredictorPage: React.FC = () => {
                           }}
                           className="text-xs text-slate-600 hover:text-indigo-600 font-medium flex items-center gap-1 transition"
                         >
-                          <span>Study Notes for this Topic</span>
+                          <span>Generate Notes for this Topic</span>
                           <ArrowRight size={13} />
                         </button>
                       </div>
 
+                      {/* Interactive Student Practice & Evaluation Drawer */}
+                      {isPracticing && (
+                        <div className="p-5 sm:p-6 bg-slate-50 border-t border-slate-200 space-y-4 animate-fadeIn">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                              <span>✍️ Practice Answer Scratchpad (Max Marks: {q.marks})</span>
+                            </h4>
+                            <button
+                              type="button"
+                              onClick={() => setPracticeQuestionId(null)}
+                              className="text-xs text-slate-400 hover:text-slate-600"
+                            >
+                              Close Practice
+                            </button>
+                          </div>
+
+                          <textarea
+                            value={studentAnswerText}
+                            onChange={(e) => setStudentAnswerText(e.target.value)}
+                            placeholder="Type your derivation steps, formulas, axioms, or bullet points here to get scored by the AI Examiner..."
+                            rows={4}
+                            className="w-full text-xs sm:text-sm p-3.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white"
+                          />
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-slate-500">
+                              Evaluated against the examiner scoring rubric criteria.
+                            </span>
+                            <button
+                              type="button"
+                              disabled={isEvaluating || !studentAnswerText.trim()}
+                              onClick={() => handleEvaluateAnswer(q)}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition disabled:opacity-50"
+                            >
+                              {isEvaluating ? (
+                                <>
+                                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  <span>Evaluating Answer...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Send size={13} />
+                                  <span>AI Evaluate My Answer</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                          {/* Evaluation Results Card */}
+                          {evaluationResult && (
+                            <div className="mt-4 p-5 rounded-xl bg-white border border-emerald-200 shadow-sm space-y-4 animate-fadeIn">
+                              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                                <div>
+                                  <span className="text-xs text-slate-400 font-semibold block">Evaluated Score:</span>
+                                  <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-black text-emerald-600">
+                                      {evaluationResult.score} / {evaluationResult.maxScore} Marks
+                                    </span>
+                                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                      {evaluationResult.grade} ({evaluationResult.percentage}%)
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Rubric Breakdown Table */}
+                              <div>
+                                <span className="text-xs font-bold text-slate-800 block mb-2">Examiner Milestone Scoring:</span>
+                                <div className="border border-slate-200 rounded-lg overflow-hidden text-xs">
+                                  <table className="w-full text-left">
+                                    <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+                                      <tr>
+                                        <th className="p-2">Criterion</th>
+                                        <th className="p-2 w-20 text-center">Score</th>
+                                        <th className="p-2">Evaluator Comment</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                      {evaluationResult.rubricBreakdown.map((r, rIdx) => (
+                                        <tr key={rIdx}>
+                                          <td className="p-2 font-medium text-slate-800">{r.criterion}</td>
+                                          <td className="p-2 text-center font-bold text-emerald-700">
+                                            {r.marksAwarded} / {r.maxMarks}
+                                          </td>
+                                          <td className="p-2 text-slate-600">{r.comment}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+
+                              {/* Advice */}
+                              <div className="p-3 rounded-lg bg-indigo-50/50 border border-indigo-200 text-xs text-indigo-950 flex items-start gap-2">
+                                <Award size={15} className="text-indigo-600 shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="font-bold">Examiner Advice: </span>
+                                  <span>{evaluationResult.examinerAdvice}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Step-by-Step Model Answer & Scoring Rubric */}
                       {isExpanded && (
                         <div className="p-5 sm:p-6 bg-white border-t border-slate-100 space-y-5">
-                          {/* Step-by-step breakdown */}
                           {q.stepByStepSolution && q.stepByStepSolution.length > 0 && (
                             <div>
                               <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -566,7 +818,6 @@ export const ExamPredictorPage: React.FC = () => {
                             </div>
                           )}
 
-                          {/* Model Answer Body */}
                           <div>
                             <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">
                               Full Model Answer:
@@ -576,7 +827,6 @@ export const ExamPredictorPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Scoring Rubric Breakdown */}
                           {q.scoringRubric && q.scoringRubric.length > 0 && (
                             <div>
                               <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
@@ -614,7 +864,112 @@ export const ExamPredictorPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 2: PYQ ARCHIVE BANK */}
+          {/* TAB 2: 100-MARK UNIVERSITY MODEL QUESTION PAPER */}
+          {activeTab === 'model_paper' && (
+            <div className="bg-white rounded-3xl border border-slate-300 shadow-sm p-6 sm:p-12 space-y-8 font-serif">
+              {/* Paper Header */}
+              <div className="text-center border-b-2 border-slate-900 pb-6 space-y-1.5">
+                <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                  {report.modelQuestionPaper.universityHeader}
+                </h2>
+                <h3 className="text-sm sm:text-base font-semibold text-slate-800">
+                  {report.modelQuestionPaper.degreeName}
+                </h3>
+                <h4 className="text-sm font-bold text-indigo-700">
+                  {report.modelQuestionPaper.courseCode} — {report.modelQuestionPaper.subjectTitle}
+                </h4>
+                <p className="text-xs text-slate-500 font-sans italic">
+                  ({report.modelQuestionPaper.regulations})
+                </p>
+                <div className="pt-3 flex items-center justify-between text-xs sm:text-sm font-bold font-sans text-slate-800 border-t border-slate-200 mt-4">
+                  <span>Time: {report.modelQuestionPaper.timeAllowed}</span>
+                  <span className="italic uppercase">Answer ALL Questions</span>
+                  <span>Maximum: {report.modelQuestionPaper.maxMarks} Marks</span>
+                </div>
+              </div>
+
+              {/* PART A */}
+              <div className="space-y-4">
+                <div className="text-center font-bold text-sm sm:text-base border-b border-slate-200 pb-1 font-sans">
+                  PART A — (10 × 2 = 20 Marks)
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 font-sans text-xs sm:text-sm">
+                  {report.modelQuestionPaper.partA.map((q) => (
+                    <div key={q.qNum} className="flex items-start justify-between gap-3 py-1">
+                      <div className="flex items-start gap-2">
+                        <span className="font-bold">{q.qNum}.</span>
+                        <FormattedMathText text={q.question} />
+                      </div>
+                      <span className="font-bold text-slate-500 shrink-0">({q.marks})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* PART B */}
+              <div className="space-y-6 pt-4">
+                <div className="text-center font-bold text-sm sm:text-base border-b border-slate-200 pb-1 font-sans">
+                  PART B — (5 × 16 = 80 Marks)
+                </div>
+
+                <div className="space-y-6 font-sans text-xs sm:text-sm">
+                  {report.modelQuestionPaper.partB.map((q) => (
+                    <div key={q.qNum} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2">
+                          <span className="font-bold">{q.optionA.label}</span>
+                          <FormattedMathText text={q.optionA.question} />
+                        </div>
+                        <span className="font-bold text-indigo-700 shrink-0">({q.optionA.marks})</span>
+                      </div>
+
+                      <div className="text-center font-bold text-xs text-red-600 tracking-wider">
+                        [ OR ]
+                      </div>
+
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2">
+                          <span className="font-bold">{q.optionB.label}</span>
+                          <FormattedMathText text={q.optionB.question} />
+                        </div>
+                        <span className="font-bold text-indigo-700 shrink-0">({q.optionB.marks})</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Toolbar */}
+              <div className="pt-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 font-sans">
+                <div className="text-xs text-slate-500">
+                  Formatted strictly according to State University / NBA curriculum regulations.
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExportDocx}
+                    disabled={isExportingDocx}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition shadow-sm"
+                  >
+                    <Download size={14} />
+                    <span>{isExportingDocx ? 'Generating DOCX...' : 'Download Full Paper (.docx)'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-1.5 transition"
+                  >
+                    <Printer size={14} />
+                    <span>Print Paper</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: PYQ ARCHIVE BANK */}
           {activeTab === 'pyq' && (
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
@@ -678,7 +1033,7 @@ export const ExamPredictorPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 3: CHAPTER WEIGHTAGE BLUEPRINT */}
+          {/* TAB 4: CHAPTER WEIGHTAGE BLUEPRINT */}
           {activeTab === 'weightage' && (
             <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-6">
               <div>
@@ -728,7 +1083,7 @@ export const ExamPredictorPage: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 4: EXAMINER SECRETS */}
+          {/* TAB 5: EXAMINER SECRETS */}
           {activeTab === 'tips' && (
             <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 space-y-5">
               <div className="flex items-center gap-3">

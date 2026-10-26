@@ -1,4 +1,5 @@
-// Exam Question Predictor & Previous Year Papers (PYQ) Engine
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, WidthType, AlignmentType, BorderStyle } from 'docx';
+import { saveAs } from 'file-saver';
 import { storageService } from './storageService';
 
 export interface PYQQuestion {
@@ -41,6 +42,62 @@ export interface TopicWeightage {
   frequencyComment: string;
 }
 
+export interface ModelPaperQuestion {
+  qNum: number;
+  question: string;
+  marks: number;
+  unit: string;
+  courseOutcome?: string;
+  bloomLevel?: string;
+}
+
+export interface ModelPaperPartBQuestion {
+  qNum: number;
+  unit: string;
+  optionA: {
+    label: string;
+    question: string;
+    marks: number;
+    subdivision?: { part: string; text: string; marks: number }[];
+  };
+  optionB: {
+    label: string;
+    question: string;
+    marks: number;
+    subdivision?: { part: string; text: string; marks: number }[];
+  };
+}
+
+export interface ModelQuestionPaper {
+  id: string;
+  universityHeader: string;
+  degreeName: string;
+  branch: string;
+  courseCode: string;
+  subjectTitle: string;
+  regulations: string;
+  timeAllowed: string;
+  maxMarks: number;
+  partA: ModelPaperQuestion[]; // 10 questions x 2 marks = 20 Marks
+  partB: ModelPaperPartBQuestion[]; // 5 questions with internal choice x 16 marks = 80 Marks
+}
+
+export interface AnswerEvaluationResult {
+  score: number;
+  maxScore: number;
+  percentage: number;
+  grade: 'Distinction (A+)' | 'First Class (A)' | 'Second Class (B)' | 'Borderline / Needs Work (C)';
+  rubricBreakdown: {
+    criterion: string;
+    marksAwarded: number;
+    maxMarks: number;
+    comment: string;
+  }[];
+  strengths: string[];
+  missingKeyElements: string[];
+  examinerAdvice: string;
+}
+
 export interface ExamPredictionReport {
   id: string;
   subject: string;
@@ -49,7 +106,9 @@ export interface ExamPredictionReport {
   university: string;
   targetChapter?: string;
   predictedCoverageScore: number; // e.g. 84 (%)
+  studyMode?: 'all' | 'pass_guarantee' | 'first_class' | 'ranker';
   predictedQuestions: PredictedQuestion[];
+  modelQuestionPaper: ModelQuestionPaper;
   pyqBank: PYQQuestion[];
   highYieldTopics: TopicWeightage[];
   examTips: string[];
@@ -470,6 +529,14 @@ export const examPredictorService = {
   },
 
   enrichReport(benchmark: any, request: PredictionRequest): ExamPredictionReport {
+    const modelPaper = this.buildModelQuestionPaper(
+      request.subject,
+      request.courseCode || 'ACAD-3101',
+      request.university || 'State Technical University (Anna / JNTU / VTU / KTU)',
+      benchmark.predictedQuestions,
+      benchmark.topics
+    );
+
     return {
       id: 'pred_' + Date.now(),
       subject: request.subject,
@@ -479,6 +546,7 @@ export const examPredictorService = {
       targetChapter: request.targetChapter || 'All Syllabus Units & Chapters',
       predictedCoverageScore: 86,
       predictedQuestions: benchmark.predictedQuestions,
+      modelQuestionPaper: modelPaper,
       pyqBank: benchmark.pyqBank,
       highYieldTopics: benchmark.topics,
       examTips: benchmark.examTips,
@@ -628,6 +696,14 @@ export const examPredictorService = {
       },
     ];
 
+    const modelPaper = this.buildModelQuestionPaper(
+      subject,
+      request.courseCode || 'ACAD-' + Math.floor(1000 + Math.random() * 9000),
+      request.university || 'State Technical University',
+      predictedQuestions,
+      highYieldTopics
+    );
+
     return {
       id: 'pred_' + Date.now(),
       subject,
@@ -637,6 +713,7 @@ export const examPredictorService = {
       targetChapter: chapter,
       predictedCoverageScore: 83,
       predictedQuestions,
+      modelQuestionPaper: modelPaper,
       pyqBank,
       highYieldTopics,
       examTips: [
@@ -646,5 +723,356 @@ export const examPredictorService = {
       ],
       generatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
     };
+  },
+
+  // 100-Mark University Model Question Paper Builder (Part A 20M + Part B 80M)
+  buildModelQuestionPaper(
+    subject: string,
+    courseCode: string,
+    university: string,
+    predictedQuestions: PredictedQuestion[],
+    topics: TopicWeightage[]
+  ): ModelQuestionPaper {
+    // Generate 10 standard Part A Questions (2 Marks each)
+    const partAQuestions: ModelPaperQuestion[] = [
+      { qNum: 1, question: `Define the primary operational invariant governing ${topics[0]?.topic || subject}.`, marks: 2, unit: 'Unit 1', courseOutcome: 'CO1', bloomLevel: 'K1 (Remember)' },
+      { qNum: 2, question: `State the boundary condition where the classical formulation in Unit 1 fails.`, marks: 2, unit: 'Unit 1', courseOutcome: 'CO1', bloomLevel: 'K2 (Understand)' },
+      { qNum: 3, question: `Write the governing mathematical formulation for ${topics[1]?.topic || subject}.`, marks: 2, unit: 'Unit 2', courseOutcome: 'CO2', bloomLevel: 'K1 (Remember)' },
+      { qNum: 4, question: `What is the significance of the Wronskian / Determinant non-singularity condition?`, marks: 2, unit: 'Unit 2', courseOutcome: 'CO2', bloomLevel: 'K2 (Understand)' },
+      { qNum: 5, question: `Give two distinguishing characteristics between the classical and optimized approaches in Unit 3.`, marks: 2, unit: 'Unit 3', courseOutcome: 'CO3', bloomLevel: 'K2 (Understand)' },
+      { qNum: 6, question: `State the balance condition or conservation criterion required in Unit 3.`, marks: 2, unit: 'Unit 3', courseOutcome: 'CO3', bloomLevel: 'K1 (Remember)' },
+      { qNum: 7, question: `Define the primary asymptotic bound or transfer response in Unit 4.`, marks: 2, unit: 'Unit 4', courseOutcome: 'CO4', bloomLevel: 'K2 (Understand)' },
+      { qNum: 8, question: `Why are boundary constraints critical during transient integration?`, marks: 2, unit: 'Unit 4', courseOutcome: 'CO4', bloomLevel: 'K2 (Understand)' },
+      { qNum: 9, question: `State any two practical limitations encountered when scaling ${subject} in production.`, marks: 2, unit: 'Unit 5', courseOutcome: 'CO5', bloomLevel: 'K3 (Apply)' },
+      { qNum: 10, question: `How is error tolerance or stability margin evaluated quantitatively in Unit 5?`, marks: 2, unit: 'Unit 5', courseOutcome: 'CO5', bloomLevel: 'K3 (Apply)' },
+    ];
+
+    // Generate 5 Part B Pairs with Internal Choice (16 Marks each)
+    const partBQuestions: ModelPaperPartBQuestion[] = [
+      {
+        qNum: 11,
+        unit: 'Unit 1',
+        optionA: {
+          label: '11. (a)',
+          question: predictedQuestions[0]?.question || `State and prove the foundational theorem of Unit 1 in ${subject}.`,
+          marks: 16,
+        },
+        optionB: {
+          label: '11. (b)',
+          question: `Explain the fundamental axioms, boundary constraints, and derive analytical bounds for Unit 1.`,
+          marks: 16,
+        },
+      },
+      {
+        qNum: 12,
+        unit: 'Unit 2',
+        optionA: {
+          label: '12. (a)',
+          question: predictedQuestions[1]?.question || `Solve the analytical problem and evaluate parametric sensitivity in Unit 2.`,
+          marks: 16,
+        },
+        optionB: {
+          label: '12. (b)',
+          question: `Derive the second-order response equations and outline step-by-step verification methods.`,
+          marks: 16,
+        },
+      },
+      {
+        qNum: 13,
+        unit: 'Unit 3',
+        optionA: {
+          label: '13. (a)',
+          question: predictedQuestions[2]?.question || `Construct a detailed comparative analysis matrix across core variants in Unit 3 with neat schematics.`,
+          marks: 16,
+        },
+        optionB: {
+          label: '13. (b)',
+          question: `Provide a complete algorithmic or structural walkthrough of the primary balanced system in Unit 3.`,
+          marks: 16,
+        },
+      },
+      {
+        qNum: 14,
+        unit: 'Unit 4',
+        optionA: {
+          label: '14. (a)',
+          question: `Formulate the integral or transform representation for Unit 4 and verify boundary equivalence.`,
+          marks: 16,
+        },
+        optionB: {
+          label: '14. (b)',
+          question: `Explain the real-world engineering architecture, dataflow, and practical design considerations in Unit 4.`,
+          marks: 16,
+        },
+      },
+      {
+        qNum: 15,
+        unit: 'Unit 5',
+        optionA: {
+          label: '15. (a)',
+          question: `Discuss the optimization techniques, error mitigation mechanisms, and performance tradeoffs in Unit 5.`,
+          marks: 16,
+        },
+        optionB: {
+          label: '15. (b)',
+          question: `Evaluate a full numerical case study demonstrating boundary stability under extreme system constraints.`,
+          marks: 16,
+        },
+      },
+    ];
+
+    return {
+      id: 'paper_' + Date.now(),
+      universityHeader: university.toUpperCase(),
+      degreeName: 'B.Tech / B.E. DEGREE SEMESTER END EXAMINATIONS, 2026',
+      branch: 'COMMON TO ALL BRANCHES / ACCREDITED CURRICULA',
+      courseCode: courseCode,
+      subjectTitle: subject.toUpperCase(),
+      regulations: 'Regulations 2021 / 2022 / 2023 CBCS Scheme',
+      timeAllowed: '3 Hours',
+      maxMarks: 100,
+      partA: partAQuestions,
+      partB: partBQuestions,
+    };
+  },
+
+  // Interactive Student Answer Self-Test Evaluator with Rubric Scoring
+  evaluateStudentAnswer(question: PredictedQuestion, studentAnswer: string): AnswerEvaluationResult {
+    const cleanAnswer = studentAnswer.trim();
+    const wordCount = cleanAnswer.split(/\s+/).filter(Boolean).length;
+    const lowerAnswer = cleanAnswer.toLowerCase();
+    const rubric = question.scoringRubric || [];
+
+    let totalAwarded = 0;
+    const breakdown: any[] = [];
+    const strengths: string[] = [];
+    const missing: string[] = [];
+
+    rubric.forEach((item) => {
+      const keywords = item.criterion.toLowerCase().split(/[\s,()\/]+/).filter((w) => w.length > 3);
+      const matched = keywords.filter((k) => lowerAnswer.includes(k));
+      const matchRatio = keywords.length > 0 ? matched.length / keywords.length : 0.5;
+
+      let marks = 0;
+      let comment = '';
+      if (wordCount < 12) {
+        marks = Math.round(item.marks * 0.15 * 10) / 10;
+        comment = 'Answer is too brief to substantiate this criterion.';
+        missing.push(`State complete details for: ${item.criterion}`);
+      } else if (matchRatio >= 0.4 || lowerAnswer.includes(item.criterion.toLowerCase().slice(0, 10))) {
+        marks = item.marks;
+        comment = 'Key concepts and analytical steps addressed effectively.';
+        strengths.push(item.criterion);
+      } else if (matchRatio >= 0.2 || wordCount > 40) {
+        marks = Math.round(item.marks * 0.65 * 10) / 10;
+        comment = 'Partially addressed; lacking detailed mathematical equations or step justifications.';
+        missing.push(`Elaborate step-by-step working on: ${item.criterion}`);
+      } else {
+        marks = Math.round(item.marks * 0.25 * 10) / 10;
+        comment = 'Criterion not explicitly demonstrated in submission.';
+        missing.push(`Missing coverage of: ${item.criterion}`);
+      }
+      totalAwarded += marks;
+      breakdown.push({
+        criterion: item.criterion,
+        marksAwarded: marks,
+        maxMarks: item.marks,
+        comment,
+      });
+    });
+
+    const finalScore = Math.min(question.marks, Math.round(totalAwarded * 10) / 10);
+    const percentage = Math.round((finalScore / question.marks) * 100);
+
+    let grade: AnswerEvaluationResult['grade'] = 'Second Class (B)';
+    if (percentage >= 85) grade = 'Distinction (A+)';
+    else if (percentage >= 70) grade = 'First Class (A)';
+    else if (percentage < 50) grade = 'Borderline / Needs Work (C)';
+
+    return {
+      score: finalScore,
+      maxScore: question.marks,
+      percentage,
+      grade,
+      rubricBreakdown: breakdown,
+      strengths: strengths.length > 0 ? strengths : ['Attempted response using relevant subject concepts'],
+      missingKeyElements: missing.length > 0 ? missing : ['Include labeled diagrams and units for maximum marks'],
+      examinerAdvice: percentage >= 80
+        ? 'Excellent academic depth! Make sure to write formal statements before numerical evaluations in the final exam.'
+        : 'Good effort! Review the step-by-step model answer to ensure critical axioms and boundary invariants are stated explicitly.',
+    };
+  },
+
+  // Export 100-Mark Predicted Question Paper & Answer Key to Real Word DOCX
+  async exportModelPaperToDocx(report: ExamPredictionReport): Promise<boolean> {
+    try {
+      const docChildren: any[] = [];
+      const paper = report.modelQuestionPaper;
+
+      // University Header Block
+      docChildren.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: paper.universityHeader, bold: true, size: 28, color: '1E293B' }),
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: paper.degreeName, bold: true, size: 22, color: '334155' }),
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: `${paper.courseCode} — ${paper.subjectTitle}`, bold: true, size: 24, color: '4F46E5' }),
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 150 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: `(${paper.regulations})`, italics: true, size: 18, color: '64748B' }),
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: `Time: ${paper.timeAllowed}                                                            Maximum: ${paper.maxMarks} Marks`, bold: true, size: 20 }),
+          ],
+          spacing: { after: 300 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'Answer ALL Questions', bold: true, italics: true, size: 18 }),
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 300 },
+        })
+      );
+
+      // PART A (10 x 2 = 20 Marks)
+      docChildren.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'PART A — (10 × 2 = 20 Marks)', bold: true, size: 22, color: '0F172A' }),
+          ],
+          spacing: { before: 200, after: 150 },
+        })
+      );
+
+      paper.partA.forEach((q) => {
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `${q.qNum}.  ${q.question} `, bold: true, size: 20 }),
+              new TextRun({ text: `(2)`, bold: true, size: 20, color: '64748B' }),
+            ],
+            spacing: { after: 120 },
+          })
+        );
+      });
+
+      // PART B (5 x 16 = 80 Marks)
+      docChildren.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'PART B — (5 × 16 = 80 Marks)', bold: true, size: 22, color: '0F172A' }),
+          ],
+          spacing: { before: 300, after: 150 },
+        })
+      );
+
+      paper.partB.forEach((q) => {
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `${q.optionA.label}  ${q.optionA.question} `, bold: true, size: 20 }),
+              new TextRun({ text: `(${q.optionA.marks})`, bold: true, size: 20, color: '4F46E5' }),
+            ],
+            spacing: { after: 80 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'OR', bold: true, size: 20, color: 'EF4444' }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 60, after: 60 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: `${q.optionB.label}  ${q.optionB.question} `, bold: true, size: 20 }),
+              new TextRun({ text: `(${q.optionB.marks})`, bold: true, size: 20, color: '4F46E5' }),
+            ],
+            spacing: { after: 200 },
+          })
+        );
+      });
+
+      // SECTION 2: EXAMINER ANSWER KEY & SCORING RUBRICS
+      docChildren.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: '==================================================', color: '94A3B8' }),
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 400, after: 200 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: 'EXAMINER MODEL ANSWERS & MARKING SCHEME', bold: true, size: 26, color: '4F46E5' }),
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 300 },
+        })
+      );
+
+      report.predictedQuestions.forEach((q, idx) => {
+        docChildren.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Question ${idx + 1} (${q.marks} Marks) [${q.probabilityScore}% Exam Probability]:`, bold: true, size: 22, color: '1E293B' }),
+            ],
+            spacing: { before: 200, after: 80 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: q.question, italics: true, size: 20 }),
+            ],
+            spacing: { after: 120 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: 'Model Solution: ', bold: true, size: 18, color: '059669' }),
+              new TextRun({ text: q.modelAnswer, size: 18 }),
+            ],
+            spacing: { after: 150 },
+          })
+        );
+      });
+
+      const doc = new Document({
+        sections: [
+          {
+            properties: {
+              page: {
+                margin: { top: 720, right: 720, bottom: 720, left: 720 },
+              },
+            },
+            children: docChildren,
+          },
+        ],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${paper.courseCode}_${report.subject.replace(/[^a-zA-Z0-9]/g, '_')}_Model_Exam_Paper.docx`);
+      return true;
+    } catch (err) {
+      console.error('Failed to export model paper to docx:', err);
+      return false;
+    }
   },
 };
