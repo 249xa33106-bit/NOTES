@@ -26,6 +26,11 @@ import {
   AlertCircle,
   ShieldCheck,
   GraduationCap,
+  Network,
+  RotateCw,
+  Award,
+  Bot,
+  Volume2,
 } from 'lucide-react';
 import { NoteDocument, NoteSection, ContentBlock } from '../types';
 import { storageService } from '../services/storageService';
@@ -33,6 +38,11 @@ import { exportService } from '../services/exportService';
 import { aiProvider } from '../services/aiProvider';
 import { ContentBlockRenderer } from '../components/renderers/ContentBlockRenderer';
 import { SAMPLE_TREE_NOTES } from '../data/sampleTreeNotes';
+import { AudioNotesPlayer } from '../components/study/AudioNotesPlayer';
+import { FlashcardsModal } from '../components/study/FlashcardsModal';
+import { MindmapViewer } from '../components/study/MindmapViewer';
+import { MockExamSimulator } from '../components/study/MockExamSimulator';
+import { AITutorDrawer } from '../components/study/AITutorDrawer';
 
 export const NotesReaderEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +50,7 @@ export const NotesReaderEditor: React.FC = () => {
 
   const [document, setDocument] = useState<NoteDocument | null>(null);
   const [activeSectionId, setActiveSectionId] = useState<string>('');
+  const [activeAudioIndex, setActiveAudioIndex] = useState<number>(0);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
@@ -47,8 +58,13 @@ export const NotesReaderEditor: React.FC = () => {
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
   const [autosaveStatus, setAutosaveStatus] = useState<string>('Saved');
 
-  // Modals
-  const [showHistoryModal, setShowHistoryModal] = useState<boolean>(false);
+  // Advanced Study Feature Modals
+  const [showFlashcards, setShowFlashcards] = useState<boolean>(false);
+  const [showMindmap, setShowMindmap] = useState<boolean>(false);
+  const [showMockExam, setShowMockExam] = useState<boolean>(false);
+  const [showAITutor, setShowAITutor] = useState<boolean>(false);
+
+  // Edit / Regenerate Modals
   const [showRegenSectionModal, setShowRegenSectionModal] = useState<NoteSection | null>(null);
   const [regenPrompt, setRegenPrompt] = useState<string>('');
   const [isRegeneratingSection, setIsRegeneratingSection] = useState<boolean>(false);
@@ -65,7 +81,6 @@ export const NotesReaderEditor: React.FC = () => {
         setActiveSectionId(doc.sections[0].id);
       }
     } else {
-      // Fallback to sample if id not found
       setDocument(SAMPLE_TREE_NOTES);
       setActiveSectionId(SAMPLE_TREE_NOTES.sections[0].id);
     }
@@ -223,10 +238,10 @@ export const NotesReaderEditor: React.FC = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col relative">
       {/* Copied Notification Toast */}
       {copiedNotification && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-modal text-xs font-semibold flex items-center gap-2 border border-slate-700 transition">
+        <div className="fixed bottom-6 left-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-modal text-xs font-semibold flex items-center gap-2 border border-slate-700 transition">
           <Check size={15} className="text-emerald-400" />
           <span>{copiedNotification}</span>
         </div>
@@ -276,7 +291,35 @@ export const NotesReaderEditor: React.FC = () => {
           </div>
 
           {/* Right Toolbar Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Advanced Study Mode Pills */}
+            <button
+              onClick={() => setShowMindmap(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/70 text-indigo-700 text-xs font-bold transition"
+              title="Explore visual knowledge graph and concept mindmap"
+            >
+              <Network size={14} className="text-indigo-600" />
+              <span>Mindmap</span>
+            </button>
+
+            <button
+              onClick={() => setShowFlashcards(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50/70 hover:bg-purple-100/70 text-purple-700 text-xs font-bold transition"
+              title="Active recall 3D flashcards mode"
+            >
+              <RotateCw size={14} className="text-purple-600" />
+              <span>Flashcards</span>
+            </button>
+
+            <button
+              onClick={() => setShowMockExam(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-800 text-xs font-bold transition"
+              title="Take a timed mock exam with automated grading"
+            >
+              <Award size={14} className="text-emerald-600" />
+              <span>Mock Exam</span>
+            </button>
+
             {/* Edit Mode Toggle */}
             <button
               onClick={() => setIsEditMode(!isEditMode)}
@@ -380,13 +423,16 @@ export const NotesReaderEditor: React.FC = () => {
 
               {/* TOC Link List */}
               <div className="overflow-y-auto flex-1 space-y-1 pr-1">
-                {filteredSections.map((sec) => {
+                {filteredSections.map((sec, idx) => {
                   const isActive = activeSectionId === sec.id;
                   return (
                     <a
                       key={sec.id}
                       href={`#${sec.id}`}
-                      onClick={() => setActiveSectionId(sec.id)}
+                      onClick={() => {
+                        setActiveSectionId(sec.id);
+                        setActiveAudioIndex(idx);
+                      }}
                       className={`block px-3 py-2 rounded-lg text-xs leading-snug transition ${
                         isActive
                           ? 'bg-indigo-50 text-indigo-700 font-bold border-l-2 border-indigo-600 pl-2.5'
@@ -425,9 +471,21 @@ export const NotesReaderEditor: React.FC = () => {
         )}
 
         {/* Notes Reading & Editing Canvas */}
-        <main className="flex-1 min-w-0 notes-container">
+        <main className="flex-1 min-w-0 notes-container space-y-6">
+          {/* Audio Lecture Player Component */}
+          <AudioNotesPlayer
+            document={document}
+            activeSectionIndex={activeAudioIndex}
+            onSectionChange={(newIdx) => {
+              setActiveAudioIndex(newIdx);
+              if (document.sections[newIdx]) {
+                setActiveSectionId(document.sections[newIdx].id);
+              }
+            }}
+          />
+
           {/* Document Cover Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-10 shadow-xs mb-8 print-cover page-break-inside-avoid">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-10 shadow-xs print-cover page-break-inside-avoid">
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
                 {document.subject}
@@ -554,6 +612,52 @@ export const NotesReaderEditor: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Floating AI Tutor Copilot Launcher */}
+      <button
+        onClick={() => setShowAITutor(true)}
+        className="fixed bottom-6 right-6 z-40 px-4 py-3 bg-gradient-to-tr from-indigo-600 to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 font-bold text-xs sm:text-sm no-print"
+      >
+        <Bot size={18} />
+        <span>Ask AI Tutor</span>
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+      </button>
+
+      {/* Flashcards Mode Modal */}
+      {showFlashcards && (
+        <FlashcardsModal
+          document={document}
+          onClose={() => setShowFlashcards(false)}
+        />
+      )}
+
+      {/* Mindmap / Knowledge Graph Modal */}
+      {showMindmap && (
+        <MindmapViewer
+          document={document}
+          onSelectSection={(secId) => {
+            setActiveSectionId(secId);
+            const el = window.document.getElementById(secId);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+          onClose={() => setShowMindmap(false)}
+        />
+      )}
+
+      {/* Mock Exam Simulator Modal */}
+      {showMockExam && (
+        <MockExamSimulator
+          document={document}
+          onClose={() => setShowMockExam(false)}
+        />
+      )}
+
+      {/* AI Tutor Drawer */}
+      <AITutorDrawer
+        document={document}
+        isOpen={showAITutor}
+        onClose={() => setShowAITutor(false)}
+      />
 
       {/* Section Regeneration Modal */}
       {showRegenSectionModal && (
